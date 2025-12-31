@@ -1,165 +1,144 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>Future Web</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 元旦快乐 - 幸运抽奖 🎉</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            color: #333;
+        }
+        h1 { color: #d63031; margin-bottom: 0.5rem; }
+        .subtitle { font-size: 0.9rem; color: #636e72; margin-bottom: 2rem; }
+        
+        #display-box {
+            height: 100px;
+            line-height: 100px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 3px dashed #fab1a0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            background: #fff;
+            color: #d63031;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Segoe UI", sans-serif;
-    }
+        .btn {
+            background: #d63031;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    body {
-      height: 100vh;
-      background: radial-gradient(circle at top, #0f2027, #000);
-      overflow: hidden;
-      color: #fff;
-    }
-
-    canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    .container {
-      position: relative;
-      z-index: 2;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .card {
-      width: 420px;
-      padding: 40px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(15px);
-      box-shadow: 0 0 40px rgba(0,255,255,0.3);
-      text-align: center;
-      animation: float 6s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%,100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); }
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-      background: linear-gradient(90deg, #00f2fe, #4facfe);
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-
-    .typing {
-      font-size: 18px;
-      height: 24px;
-      color: #8be9fd;
-      margin-bottom: 30px;
-    }
-
-    button {
-      padding: 12px 30px;
-      border: none;
-      border-radius: 30px;
-      background: linear-gradient(135deg, #00f2fe, #4facfe);
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 20px #00f2fe;
-    }
-
-    .glow {
-      position: fixed;
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,255,255,0.4), transparent 70%);
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      z-index: 1;
-    }
-  </style>
+        .result-overlay {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #f1f2f6;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
-
 <body>
 
-<canvas id="bg"></canvas>
-<div class="glow" id="glow"></div>
-
 <div class="container">
-  <div class="card">
-    <h1>未来前端系统</h1>
-    <div class="typing" id="typing"></div>
-    <button onclick="alert('Welcome to the future 🚀')">ENTER</button>
-  </div>
+    <h1>🧧 元旦抽奖 🧧</h1>
+    <p class="subtitle">抽取你的开年好运吧！</p>
+    
+    <div id="display-box">点击下方按钮开始</div>
+    
+    <button class="btn" id="draw-btn" onclick="startDraw()">开始抽奖</button>
+
+    <div id="result-area" class="result-overlay">
+        <p style="margin:0; font-weight:bold;">恭喜获得：</p>
+        <p id="final-prize" style="color:#d63031; font-size:1.2rem; margin:10px 0;"></p>
+        <p style="font-size:0.8rem; color:#666;">✨ 请截图发送给我报销 ✨</p>
+    </div>
 </div>
 
 <script>
-  /** 粒子背景 **/
-  const canvas = document.getElementById('bg');
-  const ctx = canvas.getContext('2d');
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+    const prizes = [
+        { name: "一等奖：52r", weight: 5 },
+        { name: "二等奖：自选官周报销", weight: 15 },
+        { name: "三等奖：小蛋糕一个", weight: 20 },
+        { name: "四等奖：5.2r", weight: 30 },
+        { name: "五等奖：0.52r", weight: 30 }
+    ];
 
-  const particles = Array.from({ length: 100 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    dx: (Math.random() - 0.5) * 0.5,
-    dy: (Math.random() - 0.5) * 0.5
-  }));
+    let isDrawing = false;
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00f2fe";
-    particles.forEach(p => {
-      p.x += p.dx;
-      p.y += p.dy;
-      if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
+    function startDraw() {
+        if (isDrawing) return;
+        
+        const btn = document.getElementById('draw-btn');
+        const display = document.getElementById('display-box');
+        const resultArea = document.getElementById('result-area');
+        
+        isDrawing = true;
+        btn.disabled = true;
+        resultArea.style.display = 'none';
+        
+        let counter = 0;
+        const duration = 2000; // 滚动持续2秒
+        const interval = setInterval(() => {
+            const randomShow = prizes[Math.floor(Math.random() * prizes.length)].name;
+            display.innerText = randomShow;
+        }, 80);
 
-  /** 打字机 **/
-  const text = "Next Generation Web Experience";
-  let index = 0;
-  const typing = document.getElementById("typing");
+        setTimeout(() => {
+            clearInterval(interval);
+            const finalPrize = getWeightedPrize();
+            display.innerText = finalPrize.name;
+            display.style.borderStyle = 'solid';
+            display.style.backgroundColor = '#fff9f9';
+            
+            document.getElementById('final-prize').innerText = finalPrize.name;
+            resultArea.style.display = 'block';
+            
+            isDrawing = false;
+            btn.innerText = "重抽一次";
+            btn.disabled = false;
+        }, duration);
+    }
 
-  setInterval(() => {
-    typing.textContent = text.slice(0, index++);
-    if (index > text.length) index = 0;
-  }, 120);
-
-  /** 鼠标光效 **/
-  const glow = document.getElementById("glow");
-  document.addEventListener("mousemove", e => {
-    glow.style.left = e.clientX + "px";
-    glow.style.top = e.clientY + "px";
-  });
-
-  window.onresize = () => {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-  };
+    // 简易概率算法（你可以根据需要调整权重）
+    function getWeightedPrize() {
+        const totalWeight = prizes.reduce((sum, p) => sum + p.weight, 0);
+        let random = Math.random() * totalWeight;
+        for (const prize of prizes) {
+            if (random < prize.weight) return prize;
+            random -= prize.weight;
+        }
+        return prizes[prizes.length - 1];
+    }
 </script>
 
 </body>
